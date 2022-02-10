@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -8,10 +8,13 @@
       content="width=
     , initial-scale=1.0"
     />
-    <title>Document</title>
+    <title>bistro_babushka</title>
   </head>
 
   <style>
+    body {
+      background-color: #f5deb3;
+    }
     section {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -20,8 +23,19 @@
     article {
       border-style: solid;
     }
+
+    h1 {
+      color: rgb(12, 12, 12);
+      text-align: center;
+      font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+      color: darkred;
+    }
+
     h2 {
       margin: 1.5rem;
+      text-align: center;
+      font-family: Arial, Helvetica, sans-serif;
+      color: darkred;
     }
 
     p {
@@ -32,28 +46,85 @@
       width: 100%;
     }
 
-    button {
+    nav {
       display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    button:hover {
+      filter: grayscale(100%);
+    }
+    button {
+      /* display: flex; */
+      background-color: rgb(255, 191, 88);
+      border: black;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 1rem;
+      padding: 10px;
+      border-radius: 15px;
+      filter: grayscale(0%);
+      width: auto;
+    }
+    footer {
+      text-align: center;
+      margin: 2%;
+      font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+    }
+
+    @media (max-width: 600px) {
+      nav {
+        gap: 5px;
+      }
+      button {
+        font-size: 12px;
+      }
     }
 
     .valgt {
-      background-color: brown;
+      background-color: #8f3737;
+    }
+    #modal {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      background-color: rgba(51, 51, 51, 0.603);
+      z-index: 2;
+    }
+
+    #modal article {
+      max-width: 600px;
+      margin: 2em auto;
+      background-color: rgb(248, 207, 141);
     }
   </style>
   <body>
-    <section>
-      <header>
+    <aside id="modal">
+      <article>
         <img src="" alt="" />
-      </header>
-      <nav>
-        <button data-kategoti="alt" class="valgt">Alt</button>
-        <button data-kategoti="forretter">Forretter</button>
-        <button data-kategoti="hovedretter">Hovedretter</button>
-        <button data-kategoti="desserter">Desserter</button>
-        <button data-kategoti="drikkevarer">Drikkevarer</button>
-      </nav>
-    </section>
+        <h2></h2>
+        <p class="pris"></p>
+        <p class="langbeskrivelse"></p>
+      </article>
+    </aside>
+
+    <header>
+      <img src="logo.webp" alt="logo" />
+    </header>
+
+    <nav>
+      <button data-kategoti="alt" class="valgt">Alle retter</button>
+      <button data-kategoti="forretter">Forretter</button>
+      <button data-kategoti="hovedretter">Hovedretter</button>
+      <button data-kategoti="desserter">Desserter</button>
+      <button data-kategoti="drikkevarer">Drikkevarer</button>
+    </nav>
+
+    <h1>Alle retter</h1>
+
     <h2>Menu</h2>
+
     <section id="maden">
       <template>
         <article>
@@ -64,6 +135,11 @@
         </article>
       </template>
     </section>
+    <footer>
+      Adresse: Grønnegade 97 1234 København k <br />
+      Åbningstider: mandag-fredag 10.30-22.00 <br />
+      lørdag 10.00-23.00
+    </footer>
   </body>
   <script>
     const url = "https://babushka-dd8a.restdb.io/rest/menu";
@@ -76,40 +152,93 @@
       },
     };
 
+    let json;
+    let myKatogri = "alt";
+
+    const modal = document.querySelector("#modal");
+
+    const main = document.querySelector("#maden");
+    const template = document.querySelector("template").content;
+    const header = document.querySelector("h1");
+
     // OKAY OKAY!! Så nede i min asynkrone funktion henter jeg altså både
     // min nøgle og mit link og venter på at det et hentet så jeg kan vise det
     document.addEventListener("DOMContentLoaded", start);
 
+    //vælger alle knapper og lytter efter om der bliver klikket på dem
     function start() {
+      console.log("start");
+      const filterKnapper = document.querySelectorAll("nav button");
+      filterKnapper.forEach((knap) =>
+        knap.addEventListener("click", filtrerKategorier)
+      );
+
+      //henter data fra json
       async function henData() {
         const resspons = await fetch(url, options);
-        const json = await resspons.json();
-        vis(json);
-      }
-
-      function vis(json) {
-        console.log(json);
+        json = await resspons.json();
+        vis(json, myKatogri);
       }
 
       henData();
+    }
 
-      const main = document.querySelector("#maden");
-      const template = document.querySelector("template").content;
+    //ved hvilken knap der er blevet klikket på
+    function filtrerKategorier() {
+      console.log("filtrerKategorier");
+      let klikketPaa = this.dataset.kategoti;
+      console.log("klikketPaa :" + klikketPaa);
 
-      function vis(json) {
-        console.log(json);
-        json.forEach((retter) => {
+      //gør at knappen bliver fremhævet efter man har klikket på den
+      document.querySelector(".valgt").classList.remove("valgt");
+      this.classList.add("valgt");
+
+      //overskriften ændres efter hvad man har klikket på af katogari
+      header.textContent = this.textContent;
+
+      //efter man ved hvad der blevet klikket på bliver det sammen med json lavet til en funktion
+      vis(json, klikketPaa);
+    }
+
+    //funktionen jeson og X=hvad der klikket på
+    function vis(json, x) {
+      console.log(json);
+      //main er ingen ting
+      main.textContent = "";
+      //enden skal den vise det man har kliket på eller alt
+      json.forEach((retter) => {
+        if (retter.kategori == x || x == "alt") {
           const klon = template.cloneNode(true);
-
+          //skabalonen
           klon.querySelector(".billedeurl").src =
             "images/" + retter.billednavn + "-md.jpg";
           klon.querySelector(".navn").textContent = retter.navn;
           klon.querySelector(".kortbeskrivelse").textContent =
             retter.kortbeskrivelse;
-          klon.querySelector(".pris").textContent = retter.pris;
+          klon.querySelector(".pris").textContent = retter.pris + " kr";
+
+          //gør kasserne klikbare
+          klon
+            .querySelector("article")
+            .addEventListener("click", () => visDetaljer(retter));
+
           main.appendChild(klon);
-        });
-      }
+        }
+        console.log(myKatogri);
+      });
+    }
+    //viser mere når man har klikket på en kasse
+    function visDetaljer(retter) {
+      console.log(retter);
+      modal.querySelector("h2").textContent = retter.navn;
+      modal.querySelector(".pris").textContent = retter.pris + " kr";
+      modal.querySelector(".langbeskrivelse").textContent =
+        retter.langbeskrivelse; //OBS!!!!!!!
+      modal.querySelector("img").src =
+        "images/" + retter.billednavn + "-md.jpg";
+      modal.style.display = "block";
+      //gør man kan klikke ud af viewet igen
+      modal.addEventListener("click", () => (modal.style.display = "none"));
     }
   </script>
 </html>
